@@ -69,7 +69,7 @@
         "description": "Evaluates up to 100 IP addresses simultaneously in a single HTTP request. Ideal for server log tailing and batch firewall synchronization.",
         "operationId": "bulkAssessIps",
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -77,10 +77,12 @@
                 "properties": {
                   "ips": {
                     "type": "array",
-                    "items": { "type": "string" },
-                    "example": ["185.220.101.5", "194.26.29.112", "66.249.66.1"]
+                    "items": { "type": "string" }
                   }
                 }
+              },
+              "example": {
+                "ips": ["185.220.101.5", "194.26.29.112", "66.249.66.1"]
               }
             }
           }
@@ -227,7 +229,7 @@
         "description": "Scans incoming HTTP request paths, query strings, headers, and User-Agents for SQL Injection (SQLi), Path Traversal, Sensitive File Probing (.env, .git), Remote Code Execution (RCE), and malicious security scanners (sqlmap, nikto, masscan).",
         "operationId": "analyzeHttpRequest",
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
@@ -238,6 +240,10 @@
                   "user_agent": { "type": "string", "example": "sqlmap/1.6" },
                   "http_method": { "type": "string", "example": "POST" }
                 }
+              },
+              "example": {
+                "uri": "/.env",
+                "user_agent": "sqlmap/1.6"
               }
             }
           }
