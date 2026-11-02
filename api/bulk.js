@@ -1,5 +1,6 @@
 // threat-wall-api/api/bulk.js
 const { assessIp } = require('../lib/threatEngine');
+const { parseJsonBody } = require('../lib/bodyParser');
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -22,47 +23,46 @@ module.exports = function (req, res) {
     return;
   }
 
-  let body = '';
-  req.on('data', chunk => { body += chunk; });
-  req.on('end', () => {
-    try {
-      const payload = body ? JSON.parse(body) : {};
-      const ips = Array.isArray(payload.ips) ? payload.ips : (Array.isArray(payload) ? payload : []);
-
-      if (ips.length === 0) {
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Missing "ips" array in request body. Maximum 100 IPs per batch.' }));
-        return;
-      }
-
-      if (ips.length > 100) {
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Batch limit exceeded. Maximum 100 IPs allowed per request.' }));
-        return;
-      }
-
-      const assessments = ips.map(ip => assessIp(String(ip).trim()));
-      const criticalCount = assessments.filter(a => a.risk_level === 'CRITICAL').length;
-      const highCount = assessments.filter(a => a.risk_level === 'HIGH').length;
-
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({
-        success: true,
-        total_assessed: assessments.length,
-        summary: {
-          critical_threats: criticalCount,
-          high_threats: highCount,
-          clean: assessments.length - (criticalCount + highCount)
-        },
-        results: assessments
-      }, null, 2));
-    } catch (err) {
+  parseJsonBody(req, (err, payload) => {
+    if (err) {
       res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'Invalid JSON payload.', message: err.message }));
+      res.end(JSON.stringify({ error: 'Invalid JSON request payload.', message: err.message }));
+      return;
     }
+
+    payload = payload || {};
+    const ips = Array.isArray(payload.ips) ? payload.ips : (Array.isArray(payload) ? payload : []);
+
+    if (ips.length === 0) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Missing "ips" array in request body. Maximum 100 IPs per batch.' }));
+      return;
+    }
+
+    if (ips.length > 100) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Batch limit exceeded. Maximum 100 IPs allowed per request.' }));
+      return;
+    }
+
+    const assessments = ips.map(ip => assessIp(String(ip).trim()));
+    const criticalCount = assessments.filter(a => a.risk_level === 'CRITICAL').length;
+    const highCount = assessments.filter(a => a.risk_level === 'HIGH').length;
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({
+      success: true,
+      total_assessed: assessments.length,
+      summary: {
+        critical_threats: criticalCount,
+        high_threats: highCount,
+        clean: assessments.length - (criticalCount + highCount)
+      },
+      results: assessments
+    }, null, 2));
   });
 };

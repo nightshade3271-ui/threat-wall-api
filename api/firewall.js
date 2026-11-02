@@ -1,6 +1,7 @@
 // threat-wall-api/api/firewall.js
 const url = require('url');
 const { generateFirewallRules } = require('../lib/firewallGenerator');
+const { parseJsonBody } = require('../lib/bodyParser');
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,25 +20,23 @@ module.exports = function (req, res) {
   const parsedUrl = url.parse(req.url, true);
 
   if (req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      try {
-        const payload = body ? JSON.parse(body) : {};
-        const ips = payload.ips || (payload.ip ? [payload.ip] : []);
-        const options = {
-          comment: payload.comment || 'ThreatWall Automated Block',
-          action: payload.action || 'DROP'
-        };
-        const rules = generateFirewallRules(ips, options);
-        res.statusCode = rules.success ? 200 : 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(rules, null, 2));
-      } catch (err) {
+    parseJsonBody(req, (err, payload) => {
+      if (err) {
         res.statusCode = 400;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ error: 'Invalid JSON request payload.', message: err.message }));
+        return;
       }
+      payload = payload || {};
+      const ips = payload.ips || (payload.ip ? [payload.ip] : []);
+      const options = {
+        comment: payload.comment || 'ThreatWall Automated Block',
+        action: payload.action || 'DROP'
+      };
+      const rules = generateFirewallRules(ips, options);
+      res.statusCode = rules.success ? 200 : 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(rules, null, 2));
     });
     return;
   }

@@ -1,6 +1,7 @@
 // threat-wall-api/api/analyze.js
 const url = require('url');
 const { analyzeRequest } = require('../lib/exploitDetector');
+const { parseJsonBody } = require('../lib/bodyParser');
 
 function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,20 +18,17 @@ module.exports = function (req, res) {
   }
 
   if (req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      try {
-        const payload = body ? JSON.parse(body) : {};
-        const result = analyzeRequest(payload);
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(result, null, 2));
-      } catch (err) {
+    parseJsonBody(req, (err, payload) => {
+      if (err) {
         res.statusCode = 400;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Invalid JSON payload.', message: err.message }));
+        res.end(JSON.stringify({ error: 'Invalid JSON request payload.', message: err.message }));
+        return;
       }
+      const result = analyzeRequest(payload || {});
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(result, null, 2));
     });
     return;
   }
