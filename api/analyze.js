@@ -40,6 +40,7 @@ module.exports = function (req, res) {
     uri: q.uri || q.url || q.path || '',
     query: q.query || '',
     user_agent: q.user_agent || q.userAgent || req.headers['user-agent'] || '',
+    http_method: q.http_method || q.method || 'GET',
     raw_log: q.raw_log || q.log || ''
   };
 

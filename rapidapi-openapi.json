@@ -236,7 +236,7 @@
                   "uri": { "type": "string", "example": "/.env" },
                   "query": { "type": "string", "example": "id=1 UNION SELECT password FROM users" },
                   "user_agent": { "type": "string", "example": "sqlmap/1.6" },
-                  "method": { "type": "string", "example": "GET" }
+                  "http_method": { "type": "string", "example": "POST" }
                 }
               }
             }
