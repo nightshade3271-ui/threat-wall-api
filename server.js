@@ -31,26 +31,26 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Routing
-  if (pathname === '' || pathname === '/' || pathname === '/health') {
+  // Routing (matches both external v1 routes and Vercel internal /api/ rewrites)
+  if (pathname === '' || pathname === '/' || pathname === '/health' || pathname === '/api/index') {
     return indexHandler(req, res);
   }
-  if (pathname === '/v1/ip/assess') {
+  if (pathname === '/v1/ip/assess' || pathname === '/api/assess') {
     return assessHandler(req, res);
   }
-  if (pathname === '/v1/ip/bulk-assess') {
+  if (pathname === '/v1/ip/bulk-assess' || pathname === '/api/bulk') {
     return bulkHandler(req, res);
   }
-  if (pathname === '/v1/firewall/rules') {
+  if (pathname === '/v1/firewall/rules' || pathname === '/api/firewall') {
     return firewallHandler(req, res);
   }
-  if (pathname === '/v1/threats/top-attackers') {
+  if (pathname === '/v1/threats/top-attackers' || pathname === '/api/threats') {
     return threatsHandler(req, res);
   }
-  if (pathname === '/v1/analyze/request') {
+  if (pathname === '/v1/analyze/request' || pathname === '/api/analyze') {
     return analyzeHandler(req, res);
   }
-  if (pathname === '/v1/asn/lookup') {
+  if (pathname === '/v1/asn/lookup' || pathname === '/api/asn') {
     return asnHandler(req, res);
   }
 
