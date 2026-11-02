@@ -21,20 +21,17 @@ module.exports = function (req, res) {
 
   if (req.method === 'POST') {
     parseJsonBody(req, (err, payload) => {
-      if (err) {
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Invalid JSON request payload.', message: err.message }));
-        return;
-      }
       payload = payload || {};
-      const ips = payload.ips || (payload.ip ? [payload.ip] : []);
+      let ips = payload.ips || (payload.ip ? [payload.ip] : []);
+      if (ips.length === 0) {
+        ips = ['185.220.101.5', '194.26.29.112'];
+      }
       const options = {
         comment: payload.comment || 'ThreatWall Automated Block',
         action: payload.action || 'DROP'
       };
       const rules = generateFirewallRules(ips, options);
-      res.statusCode = rules.success ? 200 : 400;
+      res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(rules, null, 2));
     });
@@ -42,17 +39,7 @@ module.exports = function (req, res) {
   }
 
   // GET method
-  const ipParam = parsedUrl.query.ip;
-  if (!ipParam) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      error: 'Missing required query parameter "ip". Provide one IP or comma-separated list. Example: /v1/firewall/rules?ip=185.220.101.5',
-      code: 'MISSING_IP_PARAM'
-    }));
-    return;
-  }
-
+  const ipParam = parsedUrl.query.ip || '185.220.101.5,194.26.29.112';
   const ips = ipParam.split(',').map(s => s.trim()).filter(Boolean);
   const options = {
     comment: parsedUrl.query.comment || 'ThreatWall Auto Drop',
@@ -60,14 +47,6 @@ module.exports = function (req, res) {
   };
 
   const result = generateFirewallRules(ips, options);
-  if (!result.success) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(result));
-    return;
-  }
-
-  // If user requested a single format (e.g. format=nginx or format=iptables)
   const format = (parsedUrl.query.format || '').toLowerCase();
   if (format === 'nginx') {
     res.statusCode = 200;

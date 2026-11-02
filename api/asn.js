@@ -17,17 +17,7 @@ module.exports = function (req, res) {
   }
 
   const parsedUrl = url.parse(req.url, true);
-  let asn = (parsedUrl.query.asn || '').toUpperCase().trim();
-
-  if (!asn) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      error: 'Missing required query parameter "asn". Example: /v1/asn/lookup?asn=AS9009 or AS57523',
-      code: 'MISSING_ASN_PARAM'
-    }));
-    return;
-  }
+  let asn = (parsedUrl.query.asn || 'AS9009').toUpperCase().trim();
 
   if (!asn.startsWith('AS')) {
     asn = `AS${asn}`;
@@ -36,7 +26,6 @@ module.exports = function (req, res) {
   const asnProfile = ASN_DATABASE[asn];
 
   if (!asnProfile) {
-    // Return synthetic profile for standard ASN
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({

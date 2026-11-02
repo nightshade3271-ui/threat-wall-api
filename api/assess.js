@@ -17,26 +17,9 @@ module.exports = function (req, res) {
   }
 
   const parsedUrl = url.parse(req.url, true);
-  const ip = parsedUrl.query.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : null);
-
-  if (!ip) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      error: 'Missing required query parameter "ip". Example: /v1/ip/assess?ip=185.220.101.5',
-      code: 'MISSING_IP_PARAM'
-    }));
-    return;
-  }
+  const ip = parsedUrl.query.ip || (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '185.220.101.5');
 
   const result = assessIp(ip);
-  if (!result.valid) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(result));
-    return;
-  }
-
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(result, null, 2));

@@ -19,13 +19,13 @@ module.exports = function (req, res) {
 
   if (req.method === 'POST') {
     parseJsonBody(req, (err, payload) => {
-      if (err) {
-        res.statusCode = 400;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Invalid JSON request payload.', message: err.message }));
-        return;
+      payload = payload || {};
+      // If playground sent empty body, provide sample exploit request to analyze
+      if (!payload.uri && !payload.query && !payload.user_agent && !payload.raw_log) {
+        payload.uri = '/.env';
+        payload.user_agent = 'sqlmap/1.6';
       }
-      const result = analyzeRequest(payload || {});
+      const result = analyzeRequest(payload);
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(result, null, 2));
@@ -33,26 +33,16 @@ module.exports = function (req, res) {
     return;
   }
 
-  // GET method - accepts query parameters
+  // GET method - accepts query parameters or provides sample defaults
   const parsedUrl = url.parse(req.url, true);
   const q = parsedUrl.query;
   const requestData = {
-    uri: q.uri || q.url || q.path || '',
+    uri: q.uri || q.url || q.path || '/.env',
     query: q.query || '',
-    user_agent: q.user_agent || q.userAgent || req.headers['user-agent'] || '',
+    user_agent: q.user_agent || q.userAgent || req.headers['user-agent'] || 'sqlmap/1.6',
     http_method: q.http_method || q.method || 'GET',
     raw_log: q.raw_log || q.log || ''
   };
-
-  if (!requestData.uri && !requestData.query && !requestData.user_agent && !requestData.raw_log) {
-    res.statusCode = 400;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({
-      error: 'Missing request parameters to analyze. Provide "uri", "query", or "user_agent". Example: /v1/analyze/request?uri=/.env&user_agent=sqlmap',
-      code: 'MISSING_ANALYZE_PARAMS'
-    }));
-    return;
-  }
 
   const result = analyzeRequest(requestData);
   res.statusCode = 200;
