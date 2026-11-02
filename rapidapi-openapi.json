@@ -1,0 +1,333 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ThreatWall API — Inbound Attack IP Intelligence & WAF Auto-Blocker",
+    "description": "High-performance cybersecurity API providing real-time inbound attack IP threat scoring, Tor exit node detection, botnet C2 discovery, exploit signature analysis, and instant multi-platform firewall rule generation (iptables, Nginx, Cloudflare WAF, AWS WAF v2, Caddy, Traefik). Designed for high-frequency automated cron sync and request screening.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "ThreatWall API Support",
+      "url": "https://threat-wall-api.vercel.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://threat-wall-api.vercel.app",
+      "description": "Production Cloud Gateway (Vercel Serverless)"
+    }
+  ],
+  "paths": {
+    "/v1/ip/assess": {
+      "get": {
+        "summary": "Real-Time IP Threat Assessment",
+        "description": "Evaluates an IPv4 or IPv6 address for malicious activity, risk level (CRITICAL, HIGH, MEDIUM, CLEAN), threat classification (TOR_EXIT_NODE, DATACENTER_BOTNET, BULLETPROOF_MALWARE_HOST, etc.), and provides recommended action (BLOCK, CHALLENGE, ALLOW).",
+        "operationId": "assessIpThreat",
+        "parameters": [
+          {
+            "name": "ip",
+            "in": "query",
+            "required": true,
+            "description": "The IPv4 or IPv6 address to evaluate.",
+            "schema": {
+              "type": "string",
+              "example": "185.220.101.5"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful threat assessment payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ip": { "type": "string", "example": "185.220.101.5" },
+                    "valid": { "type": "boolean", "example": true },
+                    "threat_score": { "type": "integer", "example": 95 },
+                    "risk_level": { "type": "string", "example": "CRITICAL" },
+                    "classification": { "type": "string", "example": "TOR_EXIT_NODE" },
+                    "confidence": { "type": "number", "example": 0.96 },
+                    "recommended_action": { "type": "string", "example": "BLOCK" },
+                    "summary": { "type": "string" },
+                    "network": { "type": "object" },
+                    "attack_history": { "type": "object" },
+                    "quick_block_syntax": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid IP address or missing parameter."
+          }
+        }
+      }
+    },
+    "/v1/ip/bulk-assess": {
+      "post": {
+        "summary": "Bulk Batch IP Threat Assessment",
+        "description": "Evaluates up to 100 IP addresses simultaneously in a single HTTP request. Ideal for server log tailing and batch firewall synchronization.",
+        "operationId": "bulkAssessIps",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ips": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "example": ["185.220.101.5", "194.26.29.112", "66.249.66.1"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch assessment results with summary statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "total_assessed": { "type": "integer", "example": 3 },
+                    "summary": { "type": "object" },
+                    "results": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/firewall/rules": {
+      "get": {
+        "summary": "Multi-Platform Firewall Rule Generator",
+        "description": "Synthesizes copy-paste ready firewall drop rules for iptables, nftables, Nginx, Cloudflare WAF, AWS WAF v2, Caddy, Traefik, Apache, and Windows Firewall.",
+        "operationId": "generateFirewallRules",
+        "parameters": [
+          {
+            "name": "ip",
+            "in": "query",
+            "required": true,
+            "description": "Single IP or comma-separated list of IPs to generate block rules for.",
+            "schema": {
+              "type": "string",
+              "example": "185.220.101.5,194.26.29.112"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "description": "Optional single format output: 'all', 'nginx', or 'iptables'.",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "nginx", "iptables"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "comment",
+            "in": "query",
+            "required": false,
+            "description": "Optional custom comment for the firewall rules.",
+            "schema": {
+              "type": "string",
+              "example": "ThreatWall Bot Block"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generated firewall configuration snippets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "ip_count": { "type": "integer", "example": 2 },
+                    "rules": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/threats/top-attackers": {
+      "get": {
+        "summary": "Live Dynamic Attacker Droplist Feed",
+        "description": "Curated live threat droplist for automated cron jobs. Returns the highest-volume malicious attacker IPs categorized by attack type (web_scanners, brute_force, tor_exits, botnet_c2). Supports plain text and shell formats for direct piping into iptables.",
+        "operationId": "getTopAttackersFeed",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Category filter: 'all', 'web_scanners', 'brute_force', 'tor_exits', 'botnet_c2'.",
+            "schema": {
+              "type": "string",
+              "default": "all"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of attacker IPs (1-500).",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "description": "Output format: 'json', 'plain_ip_list' (for curl | xargs), 'nginx', or 'iptables'.",
+            "schema": {
+              "type": "string",
+              "default": "json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attacker feed response in requested format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "count": { "type": "integer" },
+                    "threats": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analyze/request": {
+      "post": {
+        "summary": "Malicious Request & Exploit Signature Analyzer",
+        "description": "Scans incoming HTTP request paths, query strings, headers, and User-Agents for SQL Injection (SQLi), Path Traversal, Sensitive File Probing (.env, .git), Remote Code Execution (RCE), and malicious security scanners (sqlmap, nikto, masscan).",
+        "operationId": "analyzeHttpRequest",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uri": { "type": "string", "example": "/.env" },
+                  "query": { "type": "string", "example": "id=1 UNION SELECT password FROM users" },
+                  "user_agent": { "type": "string", "example": "sqlmap/1.6" },
+                  "method": { "type": "string", "example": "GET" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exploit signature analysis result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "is_malicious": { "type": "boolean", "example": true },
+                    "risk_score": { "type": "integer", "example": 95 },
+                    "severity": { "type": "string", "example": "CRITICAL" },
+                    "recommended_action": { "type": "string", "example": "BLOCK_DROP" },
+                    "recommended_http_status": { "type": "integer", "example": 403 },
+                    "threat_count": { "type": "integer", "example": 1 },
+                    "findings": { "type": "array", "items": { "type": "object" } },
+                    "suggested_mitigation": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/asn/lookup": {
+      "get": {
+        "summary": "Autonomous System (ASN) Threat Profile Lookup",
+        "description": "Queries threat reputation, historical abuse rates, hosting type (datacenter, residential, bulletproof, scanner), and common abuse vectors for an ASN.",
+        "operationId": "lookupAsnThreatProfile",
+        "parameters": [
+          {
+            "name": "asn",
+            "in": "query",
+            "required": true,
+            "description": "The ASN number (e.g. 'AS9009' or '9009').",
+            "schema": {
+              "type": "string",
+              "example": "AS9009"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ASN threat profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asn": { "type": "string", "example": "AS9009" },
+                    "name": { "type": "string", "example": "M247 Europe SRL" },
+                    "country": { "type": "string", "example": "RO" },
+                    "abuse_rate": { "type": "string", "example": "Very High" },
+                    "threat_score": { "type": "integer", "example": 82 },
+                    "risk_level": { "type": "string", "example": "CRITICAL" },
+                    "recommended_action": { "type": "string", "example": "BLOCK" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Service Health Check",
+        "description": "Returns operational status and uptime of the ThreatWall engine.",
+        "operationId": "checkServiceHealth",
+        "responses": {
+          "200": {
+            "description": "Service is healthy and ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "healthy" },
+                    "version": { "type": "string", "example": "1.0.0" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

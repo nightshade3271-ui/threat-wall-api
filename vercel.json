@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/v1/ip/assess", "destination": "/api/assess" },
+    { "source": "/v1/ip/bulk-assess", "destination": "/api/bulk" },
+    { "source": "/v1/firewall/rules", "destination": "/api/firewall" },
+    { "source": "/v1/threats/top-attackers", "destination": "/api/threats" },
+    { "source": "/v1/analyze/request", "destination": "/api/analyze" },
+    { "source": "/v1/asn/lookup", "destination": "/api/asn" },
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/$1" }
+  ]
+}

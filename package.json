@@ -1,0 +1,25 @@
+{
+  "name": "threat-wall-api",
+  "version": "1.0.0",
+  "description": "Inbound Attack IP Intelligence, Malicious Botnet Detection, and Multi-Platform Firewall Rule Generator API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "cybersecurity",
+    "threat-intelligence",
+    "waf",
+    "firewall",
+    "botnet",
+    "tor-detection",
+    "iptables",
+    "nginx-deny",
+    "cloudflare-waf",
+    "aws-waf",
+    "ddos-protection"
+  ],
+  "author": "ThreatWall Engineering Team",
+  "license": "MIT"
+}

